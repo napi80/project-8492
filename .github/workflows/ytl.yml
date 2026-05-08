@@ -34,13 +34,21 @@ jobs:
       - name: Create downloads folder
         run: mkdir -p downloads
 
+      - name: Prepare cookies
+        env:
+          COOKIES: ${{ secrets.YT_COOKIES }}
+        run: |
+          echo "$COOKIES" > cookies.txt
+        # trest
+
       - name: Download video
         env:
           URL: ${{ github.event.inputs.url }}
           QUALITY: ${{ github.event.inputs.quality }}
         run: |
           yt-dlp \
-            -f "bestvideo[height<=${QUALITY}]+bestaudio/best[height<=${QUALITY}]/best" \
+            --cookies cookies.txt \
+            -f "bestvideo[height<=${QUALITY}]+bestaudio/best" \
             --merge-output-format mp4 \
             -o "downloads/%(title)s.%(ext)s" \
             "$URL"
