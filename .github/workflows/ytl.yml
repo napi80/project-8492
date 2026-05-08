@@ -1,4 +1,4 @@
-name: YouTube Download with ytl
+name: YouTube Downloader
 
 on:
   workflow_dispatch:
@@ -8,40 +8,45 @@ on:
         required: true
         type: string
       quality:
-        description: 'Video quality (e.g. 1080p, 720p, 144p)'
+        description: 'Video quality like 1080, 720, 480'
         required: true
+        default: '720'
         type: string
 
 jobs:
-  download_video:
+  download:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install yt-dlp
         run: |
           python -m pip install --upgrade pip
-          pip install ytl
+          pip install yt-dlp
 
-      - name: Create downloads directory
+      - name: Create downloads folder
         run: mkdir -p downloads
 
-      - name: Download video with ytl
+      - name: Download video
         env:
-          INPUT_URL: ${{ github.event.inputs.url }}
-          INPUT_QUALITY: ${{ github.event.inputs.quality }}
+          URL: ${{ github.event.inputs.url }}
+          QUALITY: ${{ github.event.inputs.quality }}
         run: |
-          python scripts/download_ytl.py "$INPUT_URL" "$INPUT_QUALITY" "downloads"
+          yt-dlp \
+            -f "bestvideo[height<=${QUALITY}]+bestaudio/best[height<=${QUALITY}]/best" \
+            --merge-output-format mp4 \
+            -o "downloads/%(title)s.%(ext)s" \
+            "$URL"
 
-      - name: Upload downloads as artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-downloads
+          name: youtube-download
           path: downloads
