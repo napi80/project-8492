@@ -1,0 +1,47 @@
+name: YouTube Download with ytl
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'YouTube URL'
+        required: true
+        type: string
+      quality:
+        description: 'Video quality (e.g. 1080p, 720p, 144p)'
+        required: true
+        type: string
+
+jobs:
+  download_video:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ytl
+
+      - name: Create downloads directory
+        run: mkdir -p downloads
+
+      - name: Download video with ytl
+        env:
+          INPUT_URL: ${{ github.event.inputs.url }}
+          INPUT_QUALITY: ${{ github.event.inputs.quality }}
+        run: |
+          python scripts/download_ytl.py "$INPUT_URL" "$INPUT_QUALITY" "downloads"
+
+      - name: Upload downloads as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-downloads
+          path: downloads
